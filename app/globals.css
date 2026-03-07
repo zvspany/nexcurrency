@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 222 47% 8%;
+  --foreground: 213 31% 96%;
+  --card: 220 34% 11%;
+  --card-foreground: 210 38% 96%;
+  --popover: 221 36% 12%;
+  --popover-foreground: 210 38% 97%;
+  --primary: 193 92% 58%;
+  --primary-foreground: 221 39% 10%;
+  --secondary: 217 20% 18%;
+  --secondary-foreground: 210 37% 95%;
+  --muted: 218 18% 18%;
+  --muted-foreground: 217 17% 72%;
+  --accent: 202 88% 16%;
+  --accent-foreground: 198 100% 90%;
+  --border: 217 24% 24%;
+  --input: 217 24% 24%;
+  --ring: 192 89% 60%;
+  --radius: 0.9rem;
+}
+
+* {
+  @apply border-border;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-background text-foreground;
+  font-family: "Manrope", "Avenir Next", "Segoe UI", sans-serif;
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  overflow-x: hidden;
+  background-color: hsl(var(--background));
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: -15vh -15vw;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(
+      68% 58% at 50% -10%,
+      hsl(193 95% 58% / 0.24) 0%,
+      hsl(193 95% 58% / 0.13) 38%,
+      transparent 76%
+    ),
+    radial-gradient(52% 64% at 102% 42%, hsl(162 90% 50% / 0.11) 0%, transparent 74%),
+    radial-gradient(52% 64% at -2% 78%, hsl(210 92% 56% / 0.1) 0%, transparent 74%),
+    linear-gradient(180deg, hsl(222 45% 7%) 0%, hsl(223 48% 6%) 100%);
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.font-heading {
+  font-family: "Space Grotesk", "Manrope", "Segoe UI", sans-serif;
+}
+
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading;
+  }
+}
