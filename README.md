@@ -120,6 +120,8 @@ npm run sync:crypto-icons
 
 CoinGecko key is optional but recommended to reduce rate-limit issues.
 
+Create a `.env.local` file in the project root (same level as `package.json`) and add one of the following options:
+
 Preferred server-side variables:
 
 ```env
