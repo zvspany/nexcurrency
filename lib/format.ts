@@ -1,9 +1,5 @@
 import { RateAsset } from "@/lib/rates";
 
-function trimTrailingZeroes(value: string): string {
-  return value.replace(/\.?0+$/, "");
-}
-
 export function formatAmount(value: number, asset: RateAsset): string {
   if (!Number.isFinite(value)) {
     return "-";
@@ -18,18 +14,17 @@ export function formatAmount(value: number, asset: RateAsset): string {
       return "<0.00000001";
     }
 
-    const precision = asset.decimals ?? 8;
     const formatted = value.toLocaleString("en-US", {
-      minimumFractionDigits: value < 1 ? 4 : 2,
-      maximumFractionDigits: precision
+      minimumFractionDigits: 8,
+      maximumFractionDigits: 8
     });
 
-    return trimTrailingZeroes(formatted);
+    return formatted;
   }
 
   return value.toLocaleString("en-US", {
     minimumFractionDigits: 2,
-    maximumFractionDigits: value < 1 ? 6 : 4
+    maximumFractionDigits: 2
   });
 }
 
