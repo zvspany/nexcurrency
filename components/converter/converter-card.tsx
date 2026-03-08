@@ -218,20 +218,12 @@ export function ConverterCard({
           <CardTitle className="text-2xl font-semibold tracking-tight">
             Currency Converter
           </CardTitle>
-          <div className="flex items-center gap-2">
-            <Badge
-              variant="outline"
-              className="border-border/70 bg-background/50"
-            >
-              Fiat: {data.sources.fiat}
-            </Badge>
-            <Badge
-              variant="outline"
-              className="border-border/70 bg-background/50"
-            >
-              Crypto: {data.sources.crypto}
-            </Badge>
-          </div>
+          <Badge
+            variant="outline"
+            className="border-border/70 bg-background/50"
+          >
+            Rates: {data.sources.fiat} • {data.sources.crypto}
+          </Badge>
         </div>
         <CardDescription className="pr-1 text-base/7 sm:text-sm">
           Convert fiat currencies and cryptocurrencies using live exchange
