@@ -118,7 +118,22 @@ npm run sync:crypto-icons
 
 ## Environment Variables
 
-No API keys are required.
+CoinGecko key is optional but recommended to reduce rate-limit issues.
+
+Preferred server-side variables:
+
+```env
+COINGECKO_PRO_API_KEY=
+# or
+COINGECKO_DEMO_API_KEY=
+```
+
+Fallback generic option:
+
+```env
+COINGECKO_API_KEY=
+COINGECKO_API_KEY_TYPE=demo  # demo | pro
+```
 
 Optional variable (only if you want to call API routes through a custom base URL):
 

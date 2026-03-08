@@ -7,6 +7,38 @@ export interface CryptoRateResult {
 
 const COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3";
 
+function buildCoinGeckoHeaders(): HeadersInit {
+  const headers: Record<string, string> = {
+    accept: "application/json"
+  };
+
+  const proApiKey = process.env.COINGECKO_PRO_API_KEY?.trim();
+  const demoApiKey = process.env.COINGECKO_DEMO_API_KEY?.trim();
+  const genericApiKey = process.env.COINGECKO_API_KEY?.trim();
+  const genericApiKeyType =
+    process.env.COINGECKO_API_KEY_TYPE?.trim().toLowerCase() ?? "demo";
+
+  if (proApiKey) {
+    headers["x-cg-pro-api-key"] = proApiKey;
+    return headers;
+  }
+
+  if (demoApiKey) {
+    headers["x-cg-demo-api-key"] = demoApiKey;
+    return headers;
+  }
+
+  if (genericApiKey) {
+    if (genericApiKeyType === "pro") {
+      headers["x-cg-pro-api-key"] = genericApiKey;
+    } else {
+      headers["x-cg-demo-api-key"] = genericApiKey;
+    }
+  }
+
+  return headers;
+}
+
 export async function fetchCryptoData(): Promise<CryptoRateResult> {
   const ids = CRYPTO_ASSETS.map((asset) => asset.providerId).filter(
     (id): id is string => Boolean(id)
@@ -18,9 +50,7 @@ export async function fetchCryptoData(): Promise<CryptoRateResult> {
 
   const response = await fetch(url, {
     next: { revalidate: 60 },
-    headers: {
-      accept: "application/json"
-    }
+    headers: buildCoinGeckoHeaders()
   });
 
   if (!response.ok) {

@@ -222,7 +222,25 @@ export function ConverterCard({
             variant="outline"
             className="border-border/70 bg-background/50"
           >
-            Rates: {data.sources.fiat} • {data.sources.crypto}
+            <span className="text-muted-foreground">Fiat rates by</span>
+            <a
+              href="https://frankfurter.dev/"
+              target="_blank"
+              rel="noreferrer"
+              className="ml-1 text-foreground transition-colors hover:text-cyan-100"
+            >
+              {data.sources.fiat}
+            </a>
+            <span className="mx-1 text-muted-foreground">•</span>
+            <span className="text-muted-foreground">Price data by</span>
+            <a
+              href="https://www.coingecko.com/"
+              target="_blank"
+              rel="noreferrer"
+              className="ml-1 text-foreground transition-colors hover:text-cyan-100"
+            >
+              {data.sources.crypto}
+            </a>
           </Badge>
         </div>
         <CardDescription className="pr-1 text-base/7 sm:text-sm">
