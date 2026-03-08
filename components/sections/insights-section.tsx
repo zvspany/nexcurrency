@@ -1,6 +1,12 @@
 "use client";
 
-import { ArrowRightLeft, Landmark, Layers, MoveRight, Workflow } from "lucide-react";
+import {
+  ArrowRightLeft,
+  Landmark,
+  Layers,
+  MoveRight,
+  Workflow,
+} from "lucide-react";
 
 import { CurrencyIcon } from "@/components/converter/currency-icon";
 import { Button } from "@/components/ui/button";
@@ -23,31 +29,31 @@ const popularPairs: PopularPair[] = [
   { from: "ETH", to: "SOL", fromType: "crypto", toType: "crypto" },
   { from: "XMR", to: "BTC", fromType: "crypto", toType: "crypto" },
   { from: "LTC", to: "BTC", fromType: "crypto", toType: "crypto" },
-  { from: "CHF", to: "JPY", fromType: "fiat", toType: "fiat" }
+  { from: "CHF", to: "JPY", fromType: "fiat", toType: "fiat" },
 ];
 
 const howItWorks = [
   "Fiat rates are fetched from Frankfurter with USD as the common quote.",
   "Crypto prices are fetched from CoinGecko in USD.",
-  "Any pair is converted through normalized USD-per-unit pricing."
+  "Any pair is converted through normalized USD-per-unit pricing.",
 ];
 
 const supportedAssets = [
   {
     title: "Fiat currencies",
     description:
-      "Supports a broad list of global government-issued currencies, including major and regional pairs."
+      "Supports a broad list of global government-issued currencies, including major and regional pairs.",
   },
   {
     title: "Cryptocurrencies",
     description:
-      "Includes leading crypto assets such as BTC, ETH, LTC, XMR, SOL, USDT, and more."
+      "Includes leading crypto assets such as BTC, ETH, LTC, XMR, SOL, USDT, and more.",
   },
   {
     title: "Cross-market pairs",
     description:
-      "Convert fiat-to-crypto, crypto-to-fiat, and crypto-to-crypto in one unified experience."
-  }
+      "Convert fiat-to-crypto, crypto-to-fiat, and crypto-to-crypto in one unified experience.",
+  },
 ];
 
 interface InsightsSectionProps {
@@ -59,7 +65,7 @@ interface InsightsSectionProps {
 export function InsightsSection({
   selectedFromCode,
   selectedToCode,
-  onSelectPopularPair
+  onSelectPopularPair,
 }: InsightsSectionProps) {
   return (
     <section className="mt-10 grid gap-5 lg:grid-cols-3">
@@ -67,7 +73,7 @@ export function InsightsSection({
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <ArrowRightLeft className="h-4 w-4 text-sky-300" />
-            Popular conversions
+            Common pairs
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2 pt-0">
@@ -86,11 +92,15 @@ export function InsightsSection({
                   "h-9 rounded-full border-border/70 bg-background/50 px-3.5 font-normal transition-all",
                   "hover:border-cyan-400/40 hover:bg-cyan-400/10 hover:text-cyan-100",
                   isActive &&
-                    "border-cyan-400/50 bg-cyan-400/15 text-cyan-100 shadow-[0_0_0_1px_hsl(189_100%_40%_/_0.2)]"
+                    "border-cyan-400/50 bg-cyan-400/15 text-cyan-100 shadow-[0_0_0_1px_hsl(189_100%_40%_/_0.2)]",
                 )}
               >
                 <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm">
-                  <CurrencyIcon code={pair.from} type={pair.fromType} size="sm" />
+                  <CurrencyIcon
+                    code={pair.from}
+                    type={pair.fromType}
+                    size="sm"
+                  />
                   <span>{pair.from}</span>
                   <MoveRight className="h-3.5 w-3.5 text-cyan-300" />
                   <CurrencyIcon code={pair.to} type={pair.toType} size="sm" />
@@ -111,7 +121,10 @@ export function InsightsSection({
         </CardHeader>
         <CardContent className="space-y-3 pt-0 text-sm text-muted-foreground">
           {howItWorks.map((line) => (
-            <p key={line} className="rounded-lg border border-border/60 bg-background/40 px-3 py-2">
+            <p
+              key={line}
+              className="rounded-lg border border-border/60 bg-background/40 px-3 py-2"
+            >
               {line}
             </p>
           ))}
@@ -122,7 +135,7 @@ export function InsightsSection({
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Layers className="h-4 w-4 text-emerald-300" />
-            Supported asset types
+            Supported currencies
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 pt-0 text-sm">

@@ -12,7 +12,7 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
+  CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -23,7 +23,7 @@ import {
   formatAmount,
   formatInverseRate,
   formatRate,
-  formatTimestamp
+  formatTimestamp,
 } from "@/lib/format";
 import { buildRateMap, convertAmount } from "@/lib/rates";
 import { validateAmount } from "@/lib/validation";
@@ -62,7 +62,7 @@ function ConverterSkeleton() {
 
 function ErrorState({
   message,
-  onRetry
+  onRetry,
 }: {
   message: string;
   onRetry: () => void;
@@ -73,11 +73,17 @@ function ErrorState({
         <div className="flex items-start gap-3">
           <AlertTriangle className="mt-0.5 h-5 w-5 text-red-300" />
           <div>
-            <p className="text-sm font-medium text-red-200">Unable to load market rates</p>
+            <p className="text-sm font-medium text-red-200">
+              Unable to load market rates
+            </p>
             <p className="mt-1 text-sm text-red-200/80">{message}</p>
           </div>
         </div>
-        <Button variant="outline" onClick={onRetry} className="w-fit border-red-300/30">
+        <Button
+          variant="outline"
+          onClick={onRetry}
+          className="w-fit border-red-300/30"
+        >
           <RefreshCcw className="mr-2 h-4 w-4" />
           Retry
         </Button>
@@ -101,7 +107,7 @@ function EmptyState() {
 export function ConverterCard({
   forcedFromCode,
   forcedToCode,
-  onPairChange
+  onPairChange,
 }: ConverterCardProps) {
   const { data, error, isLoading, refresh } = useMarketRates();
 
@@ -126,7 +132,8 @@ export function ConverterCard({
     if (!rateMap.has(toCode)) {
       const fallback = rateMap.has(DEFAULT_TO)
         ? DEFAULT_TO
-        : assets.find((asset) => asset.code !== fromCode)?.code ?? assets[0].code;
+        : (assets.find((asset) => asset.code !== fromCode)?.code ??
+          assets[0].code);
 
       setToCode(fallback);
     }
@@ -209,26 +216,35 @@ export function ConverterCard({
       <CardHeader className="relative z-10 rounded-t-2xl bg-gradient-to-r from-sky-500/10 via-cyan-400/5 to-emerald-500/10 pb-4 sm:pb-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-2xl font-semibold tracking-tight">
-            Smart Converter
+            Currency Converter
           </CardTitle>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="border-border/70 bg-background/50">
+            <Badge
+              variant="outline"
+              className="border-border/70 bg-background/50"
+            >
               Fiat: {data.sources.fiat}
             </Badge>
-            <Badge variant="outline" className="border-border/70 bg-background/50">
+            <Badge
+              variant="outline"
+              className="border-border/70 bg-background/50"
+            >
               Crypto: {data.sources.crypto}
             </Badge>
           </div>
         </div>
         <CardDescription className="pr-1 text-base/7 sm:text-sm">
-          Convert fiat and crypto assets instantly using live normalized USD quote data.
+          Convert fiat currencies and cryptocurrencies using live exchange
+          rates.
         </CardDescription>
       </CardHeader>
       <CardContent className="relative z-10 space-y-5 pt-4 sm:pt-5">
         {error ? (
           <div className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
             <AlertTriangle className="h-4 w-4" />
-            <span>Using last successful data. Latest refresh failed: {error}</span>
+            <span>
+              Using last successful data. Latest refresh failed: {error}
+            </span>
           </div>
         ) : null}
 
@@ -289,12 +305,20 @@ export function ConverterCard({
           {fromAsset && toAsset ? (
             <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/60 px-2 py-1">
-                <CurrencyIcon code={fromAsset.code} type={fromAsset.type} size="sm" />
+                <CurrencyIcon
+                  code={fromAsset.code}
+                  type={fromAsset.type}
+                  size="sm"
+                />
                 {fromAsset.code}
               </span>
               <span>to</span>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/60 px-2 py-1">
-                <CurrencyIcon code={toAsset.code} type={toAsset.type} size="sm" />
+                <CurrencyIcon
+                  code={toAsset.code}
+                  type={toAsset.type}
+                  size="sm"
+                />
                 {toAsset.code}
               </span>
             </div>
@@ -304,7 +328,10 @@ export function ConverterCard({
           </p>
           {fromAsset ? (
             <p className="mt-2 text-sm text-muted-foreground">
-              for {inputValidation.ok ? formatAmount(inputValidation.value, fromAsset) : "-"}{" "}
+              for{" "}
+              {inputValidation.ok
+                ? formatAmount(inputValidation.value, fromAsset)
+                : "-"}{" "}
               {fromAsset.code}
             </p>
           ) : null}
