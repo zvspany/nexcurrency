@@ -32,6 +32,7 @@ import { validateAmount } from "@/lib/validation";
 
 const DEFAULT_FROM = "USD";
 const DEFAULT_TO = "EUR";
+const QUICK_AMOUNTS = [10, 50, 100, 500, 1000] as const;
 
 interface ConverterCardProps {
   forcedFromCode?: string;
@@ -310,6 +311,29 @@ export function ConverterCard({
               aria-invalid={Boolean(amountError)}
               aria-describedby={amountError ? "amount-error" : undefined}
             />
+          </div>
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            {QUICK_AMOUNTS.map((quickAmount) => {
+              const isActive =
+                inputValidation.ok && inputValidation.value === quickAmount;
+
+              return (
+                <Button
+                  key={quickAmount}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setAmountInput(String(quickAmount))}
+                  className={cn(
+                    "h-7 rounded-full border-border/70 px-3 text-xs text-muted-foreground transition-colors hover:text-foreground",
+                    isActive ? "border-cyan-300/50 bg-cyan-500/15 text-cyan-100" : ""
+                  )}
+                  aria-label={`Set amount to ${quickAmount}`}
+                >
+                  {quickAmount}
+                </Button>
+              );
+            })}
           </div>
           {amountError ? (
             <p id="amount-error" className="text-sm text-red-300">
