@@ -261,6 +261,16 @@ export function ConverterCard({
     return Number.isFinite(latest) ? new Date(latest).toISOString() : data.updatedAt;
   }, [data, marketData?.updatedAt]);
 
+  const amountPrefix = getDisplaySymbol(fromAsset);
+  const amountInputPaddingLeft = useMemo(() => {
+    if (!amountPrefix) {
+      return undefined;
+    }
+
+    const prefixWidthCh = Math.max(amountPrefix.length, 1);
+    return `calc(1rem + ${prefixWidthCh}ch + 0.85rem)`;
+  }, [amountPrefix]);
+
   if (isLoading && !data) {
     return <ConverterSkeleton />;
   }
@@ -279,7 +289,6 @@ export function ConverterCard({
       : "--";
 
   const amountError = inputValidation.ok ? null : inputValidation.error;
-  const amountPrefix = getDisplaySymbol(fromAsset);
 
   return (
     <Card className="relative overflow-hidden border-border/70 bg-card/90">
@@ -370,10 +379,8 @@ export function ConverterCard({
               value={amountInput}
               onChange={(event) => setAmountInput(event.target.value)}
               placeholder="Enter amount"
-              className={cn(
-                "h-14 rounded-xl bg-background/70 px-4 text-lg",
-                amountPrefix ? "pl-10" : "",
-              )}
+              className="h-14 rounded-xl bg-background/70 px-4 text-lg"
+              style={amountInputPaddingLeft ? { paddingLeft: amountInputPaddingLeft } : undefined}
               aria-invalid={Boolean(amountError)}
               aria-describedby={amountError ? "amount-error" : undefined}
             />
