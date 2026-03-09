@@ -41,6 +41,7 @@ The app normalizes both feeds into a shared internal model (`usdPrice` per asset
 ```text
 .
 ├── app
+│   ├── api/convert/route.ts
 │   ├── api/rates/route.ts
 │   ├── globals.css
 │   ├── layout.tsx
@@ -145,10 +146,20 @@ NEXT_PUBLIC_API_BASE_URL=
 
 If empty, the app uses the local default (`/api/rates`).
 
+## API Endpoints
+
+- `GET /api/rates`
+  - Returns normalized market data used by the app.
+- `GET /api/convert?from=USD&to=BTC&amount=100`
+  - Converts between any supported fiat/crypto pair using current normalized rates.
+  - Example response fields: `amount`, `convertedAmount`, `rate`, `inverseRate`, `updatedAt`, `sources`.
+
 ## Architecture Notes
 
 - `app/api/rates/route.ts` is the single internal market endpoint for the frontend.
+- `app/api/convert/route.ts` provides direct server-side conversion for external/API consumers.
 - Provider modules are isolated in `lib/api/` so they can be swapped independently.
+- Shared in-memory caching is centralized in `lib/server/rates-cache.ts`.
 - `lib/api/normalize.ts` unifies fiat and crypto responses into one shape used by UI.
 - Conversion formula is provider-agnostic:
   - `result = amount * (from.usdPrice / to.usdPrice)`
