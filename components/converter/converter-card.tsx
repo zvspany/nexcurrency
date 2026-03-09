@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, ArrowUpDown, Loader2, RefreshCcw } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowUpDown,
+  Check,
+  Copy,
+  Loader2,
+  RefreshCcw,
+} from "lucide-react";
 
 import { CurrencyIcon } from "@/components/converter/currency-icon";
 import { CurrencySelect } from "@/components/converter/currency-select";
@@ -117,6 +124,7 @@ export function ConverterCard({
   const [amountInput, setAmountInput] = useState("1");
   const [fromCode, setFromCode] = useState(DEFAULT_FROM);
   const [toCode, setToCode] = useState(DEFAULT_TO);
+  const [isCopied, setIsCopied] = useState(false);
 
   const debouncedAmount = useDebouncedValue(amountInput, 120);
 
@@ -193,6 +201,22 @@ export function ConverterCard({
   const handleSwap = () => {
     setFromCode(toCode);
     setToCode(fromCode);
+  };
+
+  const handleCopyConvertedValue = async () => {
+    if (convertedValue === null || !toAsset) {
+      return;
+    }
+
+    const text = `${formatAmount(convertedValue, toAsset)} ${toAsset.code}`;
+
+    try {
+      await navigator.clipboard.writeText(text);
+      setIsCopied(true);
+      window.setTimeout(() => setIsCopied(false), 1400);
+    } catch {
+      setIsCopied(false);
+    }
   };
 
   if (isLoading && !data) {
@@ -368,9 +392,30 @@ export function ConverterCard({
         </div>
 
         <div className="rounded-xl border border-border/70 bg-background/50 p-4">
-          <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">
-            Converted value
-          </p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">
+              Converted value
+            </p>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => void handleCopyConvertedValue()}
+              disabled={convertedValue === null || !toAsset}
+              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              aria-label={
+                isCopied
+                  ? "Converted value copied"
+                  : "Copy converted value to clipboard"
+              }
+            >
+              {isCopied ? (
+                <Check className="h-3.5 w-3.5 text-cyan-200" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" />
+              )}
+            </Button>
+          </div>
           {fromAsset && toAsset ? (
             <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/60 px-2 py-1">
