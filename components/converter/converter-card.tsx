@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { getDisplaySymbol } from "@/lib/currency-display";
 import { useMarketRates } from "@/hooks/use-market-rates";
 import {
   formatAmount,
@@ -26,6 +27,7 @@ import {
   formatTimestamp,
 } from "@/lib/format";
 import { buildRateMap, convertAmount } from "@/lib/rates";
+import { cn } from "@/lib/utils";
 import { validateAmount } from "@/lib/validation";
 
 const DEFAULT_FROM = "USD";
@@ -210,6 +212,7 @@ export function ConverterCard({
       : "--";
 
   const amountError = inputValidation.ok ? null : inputValidation.error;
+  const amountPrefix = getDisplaySymbol(fromAsset);
 
   return (
     <Card className="relative overflow-hidden border-border/70 bg-card/90">
@@ -220,27 +223,49 @@ export function ConverterCard({
           </CardTitle>
           <Badge
             variant="outline"
-            className="border-border/70 bg-background/50"
+            className="max-w-full border-border/70 bg-background/50 text-[11px] sm:text-xs"
           >
-            <span className="text-muted-foreground">Fiat rates by</span>
-            <a
-              href="https://frankfurter.dev/"
-              target="_blank"
-              rel="noreferrer"
-              className="ml-1 text-foreground transition-colors hover:text-cyan-100"
-            >
-              {data.sources.fiat}
-            </a>
-            <span className="mx-1 text-muted-foreground">•</span>
-            <span className="text-muted-foreground">Price data by</span>
-            <a
-              href="https://www.coingecko.com/"
-              target="_blank"
-              rel="noreferrer"
-              className="ml-1 text-foreground transition-colors hover:text-cyan-100"
-            >
-              {data.sources.crypto}
-            </a>
+            <span className="inline-flex items-center gap-1 whitespace-nowrap sm:hidden">
+              <span className="text-muted-foreground">Data sources:</span>
+              <a
+                href="https://frankfurter.dev/"
+                target="_blank"
+                rel="noreferrer"
+                className="text-foreground transition-colors hover:text-cyan-100"
+              >
+                {data.sources.fiat}
+              </a>
+              <span className="text-muted-foreground">•</span>
+              <a
+                href="https://www.coingecko.com/"
+                target="_blank"
+                rel="noreferrer"
+                className="text-foreground transition-colors hover:text-cyan-100"
+              >
+                {data.sources.crypto}
+              </a>
+            </span>
+
+            <span className="hidden items-center gap-1 whitespace-nowrap sm:inline-flex">
+              <span className="text-muted-foreground">Data sources:</span>
+              <a
+                href="https://frankfurter.dev/"
+                target="_blank"
+                rel="noreferrer"
+                className="text-foreground transition-colors hover:text-cyan-100"
+              >
+                {data.sources.fiat}
+              </a>
+              <span className="text-muted-foreground">•</span>
+              <a
+                href="https://www.coingecko.com/"
+                target="_blank"
+                rel="noreferrer"
+                className="text-foreground transition-colors hover:text-cyan-100"
+              >
+                {data.sources.crypto}
+              </a>
+            </span>
           </Badge>
         </div>
         <CardDescription className="pr-1 text-base/7 sm:text-sm">
@@ -265,17 +290,27 @@ export function ConverterCard({
           >
             Amount
           </label>
-          <Input
-            id="amount"
-            type="text"
-            inputMode="decimal"
-            value={amountInput}
-            onChange={(event) => setAmountInput(event.target.value)}
-            placeholder="Enter amount"
-            className="h-14 rounded-xl bg-background/70 px-4 text-lg"
-            aria-invalid={Boolean(amountError)}
-            aria-describedby={amountError ? "amount-error" : undefined}
-          />
+          <div className="relative">
+            {amountPrefix ? (
+              <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground/80">
+                {amountPrefix}
+              </span>
+            ) : null}
+            <Input
+              id="amount"
+              type="text"
+              inputMode="decimal"
+              value={amountInput}
+              onChange={(event) => setAmountInput(event.target.value)}
+              placeholder="Enter amount"
+              className={cn(
+                "h-14 rounded-xl bg-background/70 px-4 text-lg",
+                amountPrefix ? "pl-10" : "",
+              )}
+              aria-invalid={Boolean(amountError)}
+              aria-describedby={amountError ? "amount-error" : undefined}
+            />
+          </div>
           {amountError ? (
             <p id="amount-error" className="text-sm text-red-300">
               {amountError}

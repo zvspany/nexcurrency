@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Check, ChevronDown } from "lucide-react";
 
 import { POPULAR_CODES } from "@/lib/assets";
+import { getDisplaySymbol } from "@/lib/currency-display";
 import { RateAsset } from "@/lib/rates";
 import { cn } from "@/lib/utils";
 import { CurrencyIcon } from "@/components/converter/currency-icon";
@@ -34,6 +35,8 @@ function AssetLabel({ asset }: { asset?: RateAsset }) {
     );
   }
 
+  const displaySymbol = getDisplaySymbol(asset);
+
   return (
     <span className="flex min-w-0 items-center gap-2.5 text-left">
       <CurrencyIcon code={asset.code} type={asset.type} size="md" className="shrink-0" />
@@ -43,7 +46,7 @@ function AssetLabel({ asset }: { asset?: RateAsset }) {
         </span>
         <span className="truncate text-xs text-muted-foreground">
           {asset.type === "fiat" ? "Fiat" : "Crypto"}
-          {asset.symbol ? ` | ${asset.symbol}` : ""}
+          {displaySymbol ? ` | ${displaySymbol}` : ""}
         </span>
       </span>
     </span>
@@ -111,7 +114,50 @@ export function CurrencySelect({
               <CommandEmpty>No assets found.</CommandEmpty>
               {popularAssets.length > 0 ? (
                 <CommandGroup heading="Popular">
-                  {popularAssets.map((asset) => (
+                  {popularAssets.map((asset) => {
+                    const displaySymbol = getDisplaySymbol(asset);
+                    return (
+                      <CommandItem
+                        key={asset.code}
+                        value={`${asset.code} ${asset.name} ${asset.type}`}
+                        onSelect={() => {
+                          onChange(asset.code);
+                          setOpen(false);
+                        }}
+                      >
+                        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                          <CurrencyIcon
+                            code={asset.code}
+                            type={asset.type}
+                            size="md"
+                            className="shrink-0"
+                          />
+                          <span className="flex min-w-0 flex-col">
+                            <span className="truncate font-medium">
+                              {asset.code} - {asset.name}
+                            </span>
+                            <span className="truncate text-xs text-muted-foreground">
+                              {asset.type === "fiat" ? "Fiat" : "Crypto"}
+                              {displaySymbol ? ` | ${displaySymbol}` : ""}
+                            </span>
+                          </span>
+                        </div>
+                        <Check
+                          className={cn(
+                            "ml-2 h-4 w-4",
+                            value === asset.code ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              ) : null}
+              {allAssets.length > 0 ? <CommandSeparator /> : null}
+              <CommandGroup heading="All assets">
+                {allAssets.map((asset) => {
+                  const displaySymbol = getDisplaySymbol(asset);
+                  return (
                     <CommandItem
                       key={asset.code}
                       value={`${asset.code} ${asset.name} ${asset.type}`}
@@ -133,7 +179,7 @@ export function CurrencySelect({
                           </span>
                           <span className="truncate text-xs text-muted-foreground">
                             {asset.type === "fiat" ? "Fiat" : "Crypto"}
-                            {asset.symbol ? ` | ${asset.symbol}` : ""}
+                            {displaySymbol ? ` | ${displaySymbol}` : ""}
                           </span>
                         </span>
                       </div>
@@ -144,45 +190,8 @@ export function CurrencySelect({
                         )}
                       />
                     </CommandItem>
-                  ))}
-                </CommandGroup>
-              ) : null}
-              {allAssets.length > 0 ? <CommandSeparator /> : null}
-              <CommandGroup heading="All assets">
-                {allAssets.map((asset) => (
-                  <CommandItem
-                    key={asset.code}
-                    value={`${asset.code} ${asset.name} ${asset.type}`}
-                    onSelect={() => {
-                      onChange(asset.code);
-                      setOpen(false);
-                    }}
-                  >
-                    <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                      <CurrencyIcon
-                        code={asset.code}
-                        type={asset.type}
-                        size="md"
-                        className="shrink-0"
-                      />
-                      <span className="flex min-w-0 flex-col">
-                        <span className="truncate font-medium">
-                          {asset.code} - {asset.name}
-                        </span>
-                        <span className="truncate text-xs text-muted-foreground">
-                          {asset.type === "fiat" ? "Fiat" : "Crypto"}
-                          {asset.symbol ? ` | ${asset.symbol}` : ""}
-                        </span>
-                      </span>
-                    </div>
-                    <Check
-                      className={cn(
-                        "ml-2 h-4 w-4",
-                        value === asset.code ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                  </CommandItem>
-                ))}
+                  );
+                })}
               </CommandGroup>
             </CommandList>
           </Command>
