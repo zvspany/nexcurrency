@@ -5,7 +5,7 @@ import {
   RATES_CACHE_CONTROL_VALUE,
 } from "@/lib/server/rates-cache";
 
-export const revalidate = 300;
+export const revalidate = 60;
 
 export async function GET() {
   try {
@@ -19,13 +19,18 @@ export async function GET() {
     });
   } catch (error) {
     const cachedRates = getLastCachedRates();
+    const fallbackErrorMessage =
+      error instanceof Error
+        ? error.message.replace(/[\r\n]+/g, " ")
+        : "Upstream provider error";
 
     if (cachedRates) {
       return NextResponse.json(cachedRates, {
         status: 200,
         headers: {
           "Cache-Control": RATES_CACHE_CONTROL_VALUE,
-          "X-Cache-Fallback": "stale-on-error"
+          "X-Cache-Fallback": "stale-on-error",
+          "X-Cache-Fallback-Error": fallbackErrorMessage
         }
       });
     }

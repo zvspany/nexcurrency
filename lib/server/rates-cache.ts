@@ -1,9 +1,9 @@
 import { fetchUnifiedRates } from "@/lib/api/normalize";
 import type { RatesResponse } from "@/lib/rates";
 
-export const RATES_CACHE_TTL_MS = 300_000;
+export const RATES_CACHE_TTL_MS = 60_000;
 export const RATES_CACHE_CONTROL_VALUE =
-  "s-maxage=300, stale-while-revalidate=1800";
+  "s-maxage=60, stale-while-revalidate=600";
 
 let cachedRates: RatesResponse | null = null;
 let cacheTimestamp = 0;

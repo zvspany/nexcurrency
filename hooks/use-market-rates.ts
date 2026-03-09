@@ -28,9 +28,11 @@ export function useMarketRates() {
 
       const payload = await response.json();
       const parsed = parseRatesResponse(payload);
+      const isFallback = response.headers.get("X-Cache-Fallback") === "stale-on-error";
+      const fallbackError = response.headers.get("X-Cache-Fallback-Error");
 
       setData(parsed);
-      setError(null);
+      setError(isFallback ? (fallbackError ?? "Upstream provider error") : null);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       setError(message);

@@ -243,6 +243,24 @@ export function ConverterCard({
     }
   };
 
+  const displayUpdatedAt = useMemo(() => {
+    if (!data) {
+      return null;
+    }
+
+    const timestamps = [new Date(data.updatedAt).getTime()];
+
+    if (marketData?.updatedAt) {
+      timestamps.push(new Date(marketData.updatedAt).getTime());
+    }
+
+    const latest = Math.max(
+      ...timestamps.filter((timestamp) => Number.isFinite(timestamp)),
+    );
+
+    return Number.isFinite(latest) ? new Date(latest).toISOString() : data.updatedAt;
+  }, [data, marketData?.updatedAt]);
+
   if (isLoading && !data) {
     return <ConverterSkeleton />;
   }
@@ -497,7 +515,7 @@ export function ConverterCard({
           <div>
             <p className="text-xs uppercase tracking-[0.12em]">Last updated</p>
             <p className="mt-1 text-sm text-foreground">
-              {formatTimestamp(data.updatedAt)}
+              {formatTimestamp(displayUpdatedAt ?? data.updatedAt)}
             </p>
           </div>
         </div>
