@@ -2,19 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { buildApiUrl } from "@/lib/api/url";
 import { parseRatesResponse, RatesResponse } from "@/lib/rates";
 
 const REFRESH_INTERVAL_MS = 60_000;
-
-function buildApiUrl(path: string): string {
-  const base = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
-
-  if (!base) {
-    return path;
-  }
-
-  return `${base.replace(/\/$/, "")}${path}`;
-}
 
 export function useMarketRates() {
   const [data, setData] = useState<RatesResponse | null>(null);

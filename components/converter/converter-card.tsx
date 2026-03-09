@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   ArrowUpDown,
+  BarChart3,
   Check,
   Copy,
   Loader2,
@@ -24,6 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCryptoMarket } from "@/hooks/use-crypto-market";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { getDisplaySymbol } from "@/lib/currency-display";
 import { useMarketRates } from "@/hooks/use-market-rates";
@@ -31,7 +33,10 @@ import {
   formatAmount,
   formatInverseRate,
   formatRate,
+  formatSignedPercent,
   formatTimestamp,
+  formatUsdCompact,
+  formatUsdPrice,
 } from "@/lib/format";
 import { buildRateMap, convertAmount } from "@/lib/rates";
 import { cn } from "@/lib/utils";
@@ -202,6 +207,25 @@ export function ConverterCard({
     setFromCode(toCode);
     setToCode(fromCode);
   };
+
+  const marketAsset = useMemo(() => {
+    if (toAsset?.type === "crypto") {
+      return toAsset;
+    }
+
+    if (fromAsset?.type === "crypto") {
+      return fromAsset;
+    }
+
+    return null;
+  }, [fromAsset, toAsset]);
+
+  const {
+    data: marketData,
+    error: marketError,
+    isLoading: isMarketLoading,
+    refresh: refreshMarket,
+  } = useCryptoMarket(marketAsset?.code ?? null);
 
   const handleCopyConvertedValue = async () => {
     if (convertedValue === null || !toAsset) {
@@ -478,12 +502,99 @@ export function ConverterCard({
           </div>
         </div>
 
+        {marketAsset ? (
+          <div className="rounded-xl border border-border/70 bg-background/40 p-4">
+            <div className="flex items-center justify-between gap-2">
+              <p className="inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.12em] text-muted-foreground">
+                <BarChart3 className="h-3.5 w-3.5" />
+                Market data
+              </p>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/70 px-2 py-1 text-xs text-foreground">
+                <CurrencyIcon
+                  code={marketAsset.code}
+                  type={marketAsset.type}
+                  size="sm"
+                />
+                {marketAsset.code}
+              </span>
+            </div>
+
+            {marketError && !marketData ? (
+              <p className="mt-3 text-xs text-red-300/90">
+                Unable to load market data right now.
+              </p>
+            ) : null}
+
+            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-lg border border-border/60 bg-background/60 p-3">
+                <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">
+                  Price
+                </p>
+                <p className="mt-1 text-base font-medium text-foreground">
+                  {marketData ? formatUsdPrice(marketData.priceUsd) : "-"}
+                </p>
+              </div>
+              <div className="rounded-lg border border-border/60 bg-background/60 p-3">
+                <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">
+                  24h
+                </p>
+                <p
+                  className={cn(
+                    "mt-1 text-base font-medium text-foreground",
+                    marketData && marketData.change24hPct !== null
+                      ? marketData.change24hPct > 0
+                        ? "text-emerald-300"
+                        : marketData.change24hPct < 0
+                          ? "text-red-300"
+                          : "text-foreground"
+                      : "text-foreground",
+                  )}
+                >
+                  {marketData
+                    ? formatSignedPercent(marketData.change24hPct)
+                    : "-"}
+                </p>
+              </div>
+              <div className="rounded-lg border border-border/60 bg-background/60 p-3">
+                <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">
+                  Market cap
+                </p>
+                <p className="mt-1 text-base font-medium text-foreground">
+                  {marketData ? formatUsdCompact(marketData.marketCapUsd) : "-"}
+                </p>
+              </div>
+              <div className="rounded-lg border border-border/60 bg-background/60 p-3">
+                <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">
+                  Volume (24h)
+                </p>
+                <p className="mt-1 text-base font-medium text-foreground">
+                  {marketData ? formatUsdCompact(marketData.volume24hUsd) : "-"}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-3 flex min-h-4 items-center justify-between gap-2 text-xs text-muted-foreground">
+              <span>
+                {marketData
+                  ? `Updated ${formatTimestamp(marketData.updatedAt)}`
+                  : isMarketLoading
+                    ? "Updating market data..."
+                    : ""}
+              </span>
+              {marketData ? <span>Source: {marketData.source}</span> : null}
+            </div>
+          </div>
+        ) : null}
+
         <div className="flex items-center justify-end">
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => void refresh()}
+            onClick={() => {
+              void refresh();
+              void refreshMarket();
+            }}
             className="text-muted-foreground"
           >
             <RefreshCcw className="mr-2 h-4 w-4" />

@@ -5,6 +5,14 @@ export interface CryptoRateResult {
   updatedAt: string;
 }
 
+export interface CryptoMarketSnapshot {
+  priceUsd: number;
+  change24hPct: number | null;
+  marketCapUsd: number | null;
+  volume24hUsd: number | null;
+  updatedAt: string;
+}
+
 const COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3";
 
 function buildCoinGeckoHeaders(): HeadersInit {
@@ -37,6 +45,50 @@ function buildCoinGeckoHeaders(): HeadersInit {
   }
 
   return headers;
+}
+
+export async function fetchCryptoMarketSnapshot(
+  providerId: string,
+): Promise<CryptoMarketSnapshot> {
+  const url = `${COINGECKO_BASE_URL}/coins/markets?vs_currency=usd&ids=${encodeURIComponent(
+    providerId,
+  )}&price_change_percentage=24h`;
+
+  const response = await fetch(url, {
+    next: { revalidate: 60 },
+    headers: buildCoinGeckoHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Unable to load crypto market data (${response.status})`);
+  }
+
+  const payload = (await response.json()) as Array<{
+    current_price?: number;
+    market_cap?: number;
+    total_volume?: number;
+    price_change_percentage_24h?: number;
+    last_updated?: string;
+  }>;
+
+  const market = payload[0];
+
+  if (!market?.current_price || market.current_price <= 0) {
+    throw new Error("Crypto market data is unavailable");
+  }
+
+  return {
+    priceUsd: market.current_price,
+    change24hPct:
+      typeof market.price_change_percentage_24h === "number"
+        ? market.price_change_percentage_24h
+        : null,
+    marketCapUsd:
+      typeof market.market_cap === "number" ? market.market_cap : null,
+    volume24hUsd:
+      typeof market.total_volume === "number" ? market.total_volume : null,
+    updatedAt: market.last_updated ?? new Date().toISOString(),
+  };
 }
 
 export async function fetchCryptoData(): Promise<CryptoRateResult> {

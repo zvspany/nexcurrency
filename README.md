@@ -42,6 +42,7 @@ The app normalizes both feeds into a shared internal model (`usdPrice` per asset
 .
 ├── app
 │   ├── api/convert/route.ts
+│   ├── api/market/route.ts
 │   ├── api/rates/route.ts
 │   ├── globals.css
 │   ├── layout.tsx
@@ -63,6 +64,7 @@ The app normalizes both feeds into a shared internal model (`usdPrice` per asset
 │       ├── separator.tsx
 │       └── skeleton.tsx
 ├── hooks
+│   ├── use-crypto-market.ts
 │   ├── use-debounced-value.ts
 │   └── use-market-rates.ts
 ├── lib
@@ -70,9 +72,15 @@ The app normalizes both feeds into a shared internal model (`usdPrice` per asset
 │   │   ├── crypto.ts
 │   │   ├── fiat.ts
 │   │   └── normalize.ts
+│   ├── api/url.ts
 │   ├── assets.ts
+│   ├── currency-display.ts
 │   ├── format.ts
+│   ├── market.ts
 │   ├── rates.ts
+│   ├── server
+│   │   ├── market-cache.ts
+│   │   └── rates-cache.ts
 │   ├── utils.ts
 │   └── validation.ts
 ├── .env.example
@@ -153,13 +161,17 @@ If empty, the app uses the local default (`/api/rates`).
 - `GET /api/convert?from=USD&to=BTC&amount=100`
   - Converts between any supported fiat/crypto pair using current normalized rates.
   - Example response fields: `amount`, `convertedAmount`, `rate`, `inverseRate`, `updatedAt`, `sources`.
+- `GET /api/market?code=BTC`
+  - Returns CoinGecko-based market snapshot for a crypto asset.
+  - Example response fields: `priceUsd`, `change24hPct`, `marketCapUsd`, `volume24hUsd`, `updatedAt`.
 
 ## Architecture Notes
 
 - `app/api/rates/route.ts` is the single internal market endpoint for the frontend.
 - `app/api/convert/route.ts` provides direct server-side conversion for external/API consumers.
+- `app/api/market/route.ts` provides crypto market snapshot data (price, 24h, market cap, volume).
 - Provider modules are isolated in `lib/api/` so they can be swapped independently.
-- Shared in-memory caching is centralized in `lib/server/rates-cache.ts`.
+- Shared in-memory caching is centralized in `lib/server/`.
 - `lib/api/normalize.ts` unifies fiat and crypto responses into one shape used by UI.
 - Conversion formula is provider-agnostic:
   - `result = amount * (from.usdPrice / to.usdPrice)`
