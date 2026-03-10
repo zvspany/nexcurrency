@@ -163,7 +163,7 @@ If empty, the app uses the local default (`/api/rates`).
   - Example response fields: `amount`, `convertedAmount`, `rate`, `inverseRate`, `updatedAt`, `sources`.
 - `GET /api/market?code=BTC`
   - Returns CoinGecko-based market snapshot for a crypto asset.
-  - Example response fields: `priceUsd`, `change24hPct`, `marketCapUsd`, `volume24hUsd`, `updatedAt`.
+  - Example response fields: `priceUsd`, `change24hPct`, `marketCapUsd`, `volume24hUsd`, `priceHistory24h`, `updatedAt`.
 
 ## Architecture Notes
 

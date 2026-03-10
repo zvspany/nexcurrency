@@ -1,4 +1,7 @@
-import { fetchCryptoMarketSnapshot } from "@/lib/api/crypto";
+import {
+  fetchCryptoMarketSnapshot,
+  fetchCryptoPriceHistory24h,
+} from "@/lib/api/crypto";
 
 export interface CachedCryptoMarketSnapshot {
   code: string;
@@ -7,6 +10,10 @@ export interface CachedCryptoMarketSnapshot {
   change24hPct: number | null;
   marketCapUsd: number | null;
   volume24hUsd: number | null;
+  priceHistory24h: Array<{
+    timestamp: string;
+    priceUsd: number;
+  }>;
   updatedAt: string;
   source: "CoinGecko";
 }
@@ -44,6 +51,13 @@ export async function getCryptoMarketWithCache(params: {
 
   const requestPromise = (async () => {
     const snapshot = await fetchCryptoMarketSnapshot(params.providerId);
+    let history: Array<{ timestamp: string; priceUsd: number }> = [];
+
+    try {
+      history = await fetchCryptoPriceHistory24h(params.providerId);
+    } catch {
+      history = [];
+    }
 
     const normalized: CachedCryptoMarketSnapshot = {
       code: params.code,
@@ -52,6 +66,7 @@ export async function getCryptoMarketWithCache(params: {
       change24hPct: snapshot.change24hPct,
       marketCapUsd: snapshot.marketCapUsd,
       volume24hUsd: snapshot.volume24hUsd,
+      priceHistory24h: history,
       updatedAt: snapshot.updatedAt,
       source: "CoinGecko",
     };

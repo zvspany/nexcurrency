@@ -13,6 +13,11 @@ export interface CryptoMarketSnapshot {
   updatedAt: string;
 }
 
+export interface CryptoPricePoint {
+  timestamp: string;
+  priceUsd: number;
+}
+
 const COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3";
 
 function buildCoinGeckoHeaders(): HeadersInit {
@@ -89,6 +94,43 @@ export async function fetchCryptoMarketSnapshot(
       typeof market.total_volume === "number" ? market.total_volume : null,
     updatedAt: market.last_updated ?? new Date().toISOString(),
   };
+}
+
+export async function fetchCryptoPriceHistory24h(
+  providerId: string,
+): Promise<CryptoPricePoint[]> {
+  const url = `${COINGECKO_BASE_URL}/coins/${encodeURIComponent(
+    providerId,
+  )}/market_chart?vs_currency=usd&days=1`;
+
+  const response = await fetch(url, {
+    next: { revalidate: 60 },
+    headers: buildCoinGeckoHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Unable to load crypto price history (${response.status})`);
+  }
+
+  const payload = (await response.json()) as {
+    prices?: Array<[number, number]>;
+  };
+
+  const points = (payload.prices ?? [])
+    .filter(
+      (entry): entry is [number, number] =>
+        Array.isArray(entry) &&
+        entry.length >= 2 &&
+        Number.isFinite(entry[0]) &&
+        Number.isFinite(entry[1]) &&
+        entry[1] > 0,
+    )
+    .map(([timestamp, priceUsd]) => ({
+      timestamp: new Date(timestamp).toISOString(),
+      priceUsd,
+    }));
+
+  return points;
 }
 
 export async function fetchCryptoData(): Promise<CryptoRateResult> {

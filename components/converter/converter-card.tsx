@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { CurrencyIcon } from "@/components/converter/currency-icon";
+import { PriceSparkline } from "@/components/converter/price-sparkline";
 import { CurrencySelect } from "@/components/converter/currency-select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -549,6 +550,12 @@ export function ConverterCard({
                 Unable to load market data right now.
               </p>
             ) : null}
+
+            <PriceSparkline
+              points={marketData?.priceHistory24h ?? []}
+              isLoading={isMarketLoading && !marketData}
+              className="mt-3"
+            />
 
             <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-lg border border-border/60 bg-background/60 p-3">

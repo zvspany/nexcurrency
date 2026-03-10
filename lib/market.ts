@@ -7,6 +7,10 @@ export interface CryptoMarketResponse {
   change24hPct: number | null;
   marketCapUsd: number | null;
   volume24hUsd: number | null;
+  priceHistory24h: Array<{
+    timestamp: string;
+    priceUsd: number;
+  }>;
   updatedAt: string;
   source: string;
 }
@@ -18,6 +22,15 @@ const marketResponseSchema = z.object({
   change24hPct: z.number().nullable(),
   marketCapUsd: z.number().nullable(),
   volume24hUsd: z.number().nullable(),
+  priceHistory24h: z
+    .array(
+      z.object({
+        timestamp: z.string(),
+        priceUsd: z.number().positive(),
+      }),
+    )
+    .optional()
+    .default([]),
   updatedAt: z.string(),
   source: z.string(),
 });
