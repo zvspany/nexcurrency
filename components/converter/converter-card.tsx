@@ -46,11 +46,14 @@ import { validateAmount } from "@/lib/validation";
 const DEFAULT_FROM = "USD";
 const DEFAULT_TO = "EUR";
 const QUICK_AMOUNTS = [10, 50, 100, 500, 1000] as const;
+const DEFAULT_MULTI_CONVERSION_CODES = ["USD", "EUR", "BTC", "ETH", "SOL"] as const;
+const MAX_MULTI_CONVERSIONS = 4;
 
 interface ConverterCardProps {
   forcedFromCode?: string;
   forcedToCode?: string;
   onPairChange?: (fromCode: string, toCode: string) => void;
+  multiConversionCodes?: string[];
 }
 
 function ConverterSkeleton() {
@@ -124,6 +127,7 @@ export function ConverterCard({
   forcedFromCode,
   forcedToCode,
   onPairChange,
+  multiConversionCodes,
 }: ConverterCardProps) {
   const { data, error, isLoading, refresh } = useMarketRates();
 
@@ -187,6 +191,35 @@ export function ConverterCard({
 
     return convertAmount(debouncedValidation.value, fromAsset, toAsset);
   }, [fromAsset, toAsset, debouncedValidation]);
+
+  const resolvedMultiConversionCodes = useMemo(() => {
+    const configuredCodes =
+      multiConversionCodes && multiConversionCodes.length > 0
+        ? multiConversionCodes
+        : [...DEFAULT_MULTI_CONVERSION_CODES];
+
+    return Array.from(
+      new Set(
+        [toCode, ...configuredCodes]
+          .map((code) => code.trim().toUpperCase())
+          .filter(Boolean),
+      ),
+    ).slice(0, MAX_MULTI_CONVERSIONS);
+  }, [multiConversionCodes, toCode]);
+
+  const multiConversions = useMemo(() => {
+    if (!fromAsset || !debouncedValidation.ok) {
+      return [];
+    }
+
+    return resolvedMultiConversionCodes
+      .map((code) => rateMap.get(code))
+      .filter((asset): asset is NonNullable<typeof asset> => Boolean(asset))
+      .map((asset) => ({
+        asset,
+        value: convertAmount(debouncedValidation.value, fromAsset, asset),
+      }));
+  }, [fromAsset, debouncedValidation, resolvedMultiConversionCodes, rateMap]);
 
   const currentRate = useMemo(() => {
     if (!fromAsset || !toAsset) {
@@ -498,6 +531,55 @@ export function ConverterCard({
                 : "-"}{" "}
               {fromAsset.code}
             </p>
+          ) : null}
+        </div>
+
+        <div className="rounded-xl border border-border/70 bg-background/40 p-4">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">
+              Multi conversion
+            </p>
+            {fromAsset && debouncedValidation.ok ? (
+              <span className="text-xs text-muted-foreground">
+                for {formatAmount(debouncedValidation.value, fromAsset)} {fromAsset.code}
+              </span>
+            ) : null}
+          </div>
+
+          {!debouncedValidation.ok ? (
+            <p className="mt-3 text-sm text-red-300">{debouncedValidation.error}</p>
+          ) : null}
+
+          {debouncedValidation.ok && multiConversions.length === 0 ? (
+            <p className="mt-3 text-sm text-muted-foreground">
+              No additional assets available for multi conversion.
+            </p>
+          ) : null}
+
+          {debouncedValidation.ok && multiConversions.length > 0 ? (
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {multiConversions.map(({ asset, value }) => (
+                <div
+                  key={asset.code}
+                  className="rounded-lg border border-border/60 bg-background/60 p-3"
+                >
+                  <div className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <CurrencyIcon code={asset.code} type={asset.type} size="sm" />
+                    {asset.code}
+                  </div>
+                  <p className="mt-1 text-base font-medium text-foreground">
+                    {formatAmount(value, asset)} {asset.code}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          {isLoading ? (
+            <div className="mt-3 inline-flex items-center gap-2 text-xs text-muted-foreground">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Updating multi conversion...
+            </div>
           ) : null}
         </div>
 
