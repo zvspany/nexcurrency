@@ -29,6 +29,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCryptoMarket } from "@/hooks/use-crypto-market";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { getDisplaySymbol } from "@/lib/currency-display";
+import {
+  MARKET_CHART_RANGES,
+  type MarketChartRange,
+} from "@/lib/market";
 import { useMarketRates } from "@/hooks/use-market-rates";
 import {
   formatAmount,
@@ -48,6 +52,13 @@ const DEFAULT_TO = "EUR";
 const QUICK_AMOUNTS = [10, 50, 100, 500, 1000] as const;
 const DEFAULT_MULTI_CONVERSION_CODES = ["USD", "EUR", "BTC", "ETH", "SOL"] as const;
 const MAX_MULTI_CONVERSIONS = 4;
+const MARKET_RANGE_LABELS: Record<MarketChartRange, string> = {
+  "24h": "24h",
+  "7d": "7d",
+  "30d": "30d",
+  "1y": "1y",
+  all: "all",
+};
 
 interface ConverterCardProps {
   forcedFromCode?: string;
@@ -135,6 +146,7 @@ export function ConverterCard({
   const [fromCode, setFromCode] = useState(DEFAULT_FROM);
   const [toCode, setToCode] = useState(DEFAULT_TO);
   const [isCopied, setIsCopied] = useState(false);
+  const [marketRange, setMarketRange] = useState<MarketChartRange>("24h");
 
   const debouncedAmount = useDebouncedValue(amountInput, 120);
 
@@ -259,7 +271,7 @@ export function ConverterCard({
     error: marketError,
     isLoading: isMarketLoading,
     refresh: refreshMarket,
-  } = useCryptoMarket(marketAsset?.code ?? null);
+  } = useCryptoMarket(marketAsset?.code ?? null, marketRange);
 
   const handleCopyConvertedValue = async () => {
     if (convertedValue === null || !toAsset) {
@@ -294,6 +306,35 @@ export function ConverterCard({
 
     return Number.isFinite(latest) ? new Date(latest).toISOString() : data.updatedAt;
   }, [data, marketData?.updatedAt]);
+
+  const marketRangeChangePct = useMemo(() => {
+    if (!marketData) {
+      return null;
+    }
+
+    const points = marketData.priceHistory;
+
+    if (points.length >= 2) {
+      const first = points[0]?.priceUsd;
+      const last = points[points.length - 1]?.priceUsd;
+
+      if (
+        typeof first === "number" &&
+        typeof last === "number" &&
+        Number.isFinite(first) &&
+        Number.isFinite(last) &&
+        first > 0
+      ) {
+        return ((last - first) / first) * 100;
+      }
+    }
+
+    if (marketRange === "24h") {
+      return marketData.change24hPct;
+    }
+
+    return null;
+  }, [marketData, marketRange]);
 
   const amountPrefix = getDisplaySymbol(fromAsset);
   const amountInputPaddingLeft = useMemo(() => {
@@ -627,6 +668,30 @@ export function ConverterCard({
               </span>
             </div>
 
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {MARKET_CHART_RANGES.map((range) => {
+                const isActive = marketRange === range;
+
+                return (
+                  <Button
+                    key={range}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setMarketRange(range)}
+                    className={cn(
+                      "h-7 rounded-full border-border/70 px-3 text-xs text-muted-foreground hover:text-foreground",
+                      isActive ? "border-cyan-300/50 bg-cyan-500/15 text-cyan-100" : "",
+                    )}
+                    aria-pressed={isActive}
+                    aria-label={`Show ${MARKET_RANGE_LABELS[range]} chart`}
+                  >
+                    {MARKET_RANGE_LABELS[range]}
+                  </Button>
+                );
+              })}
+            </div>
+
             {marketError && !marketData ? (
               <p className="mt-3 text-xs text-red-300/90">
                 Unable to load market data right now.
@@ -634,7 +699,8 @@ export function ConverterCard({
             ) : null}
 
             <PriceSparkline
-              points={marketData?.priceHistory24h ?? []}
+              points={marketData?.priceHistory ?? []}
+              rangeLabel={MARKET_RANGE_LABELS[marketRange]}
               isLoading={isMarketLoading && !marketData}
               className="mt-3"
             />
@@ -650,23 +716,21 @@ export function ConverterCard({
               </div>
               <div className="rounded-lg border border-border/60 bg-background/60 p-3">
                 <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">
-                  24h
+                  {MARKET_RANGE_LABELS[marketRange]}
                 </p>
                 <p
                   className={cn(
                     "mt-1 text-base font-medium text-foreground",
-                    marketData && marketData.change24hPct !== null
-                      ? marketData.change24hPct > 0
+                    marketRangeChangePct !== null
+                      ? marketRangeChangePct > 0
                         ? "text-emerald-300"
-                        : marketData.change24hPct < 0
+                        : marketRangeChangePct < 0
                           ? "text-red-300"
                           : "text-foreground"
                       : "text-foreground",
                   )}
                 >
-                  {marketData
-                    ? formatSignedPercent(marketData.change24hPct)
-                    : "-"}
+                  {marketData ? formatSignedPercent(marketRangeChangePct) : "-"}
                 </p>
               </div>
               <div className="rounded-lg border border-border/60 bg-background/60 p-3">

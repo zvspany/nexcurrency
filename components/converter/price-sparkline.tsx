@@ -11,12 +11,14 @@ interface PriceSparklinePoint {
 
 interface PriceSparklineProps {
   points: PriceSparklinePoint[];
+  rangeLabel: string;
   isLoading?: boolean;
   className?: string;
 }
 
 export function PriceSparkline({
   points,
+  rangeLabel,
   isLoading = false,
   className,
 }: PriceSparklineProps) {
@@ -82,7 +84,7 @@ export function PriceSparkline({
       )}
     >
       <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground">
-        Price (24h)
+        Price ({rangeLabel})
       </p>
 
       {chart ? (
@@ -91,7 +93,7 @@ export function PriceSparkline({
             viewBox={`0 0 ${chart.width} ${chart.height}`}
             className="h-20 w-full"
             role="img"
-            aria-label="Price trend over the last 24 hours"
+            aria-label={`Price trend over the last ${rangeLabel}`}
             preserveAspectRatio="none"
             shapeRendering="geometricPrecision"
           >
@@ -130,7 +132,9 @@ export function PriceSparkline({
         </div>
       ) : (
         <div className="mt-2 flex h-20 items-center justify-center rounded-md border border-dashed border-border/60 text-xs text-muted-foreground">
-          {isLoading ? "Loading 24h price history..." : "24h price history unavailable"}
+          {isLoading
+            ? `Loading ${rangeLabel} price history...`
+            : `${rangeLabel} price history unavailable`}
         </div>
       )}
     </div>

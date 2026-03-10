@@ -4,13 +4,17 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { buildApiUrl } from "@/lib/api/url";
 import {
+  type MarketChartRange,
   parseCryptoMarketResponse,
   type CryptoMarketResponse,
 } from "@/lib/market";
 
 const REFRESH_INTERVAL_MS = 60_000;
 
-export function useCryptoMarket(assetCode: string | null) {
+export function useCryptoMarket(
+  assetCode: string | null,
+  range: MarketChartRange = "24h",
+) {
   const [data, setData] = useState<CryptoMarketResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -18,7 +22,7 @@ export function useCryptoMarket(assetCode: string | null) {
   useEffect(() => {
     setData(null);
     setError(null);
-  }, [assetCode]);
+  }, [assetCode, range]);
 
   const fetchMarket = useCallback(async () => {
     if (!assetCode) {
@@ -32,7 +36,9 @@ export function useCryptoMarket(assetCode: string | null) {
 
     try {
       const response = await fetch(
-        buildApiUrl(`/api/market?code=${encodeURIComponent(assetCode)}`),
+        buildApiUrl(
+          `/api/market?code=${encodeURIComponent(assetCode)}&range=${encodeURIComponent(range)}`,
+        ),
       );
 
       if (!response.ok) {
@@ -53,7 +59,7 @@ export function useCryptoMarket(assetCode: string | null) {
     } finally {
       setIsLoading(false);
     }
-  }, [assetCode]);
+  }, [assetCode, range]);
 
   useEffect(() => {
     void fetchMarket();
@@ -80,7 +86,7 @@ export function useCryptoMarket(assetCode: string | null) {
       window.clearInterval(id);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [assetCode, fetchMarket]);
+  }, [assetCode, range, fetchMarket]);
 
   return useMemo(
     () => ({

@@ -161,9 +161,10 @@ If empty, the app uses the local default (`/api/rates`).
 - `GET /api/convert?from=USD&to=BTC&amount=100`
   - Converts between any supported fiat/crypto pair using current normalized rates.
   - Example response fields: `amount`, `convertedAmount`, `rate`, `inverseRate`, `updatedAt`, `sources`.
-- `GET /api/market?code=BTC`
+- `GET /api/market?code=BTC&range=24h`
   - Returns CoinGecko-based market snapshot for a crypto asset.
-  - Example response fields: `priceUsd`, `change24hPct`, `marketCapUsd`, `volume24hUsd`, `priceHistory24h`, `updatedAt`.
+  - Supported ranges: `24h`, `7d`, `30d`, `1y`, `all`.
+  - Example response fields: `priceUsd`, `change24hPct`, `marketCapUsd`, `volume24hUsd`, `priceHistoryRange`, `priceHistory`, `updatedAt`.
 
 ## Architecture Notes
 

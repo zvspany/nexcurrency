@@ -1,4 +1,5 @@
 import { CRYPTO_ASSETS } from "@/lib/assets";
+import type { MarketChartRange } from "@/lib/market";
 
 export interface CryptoRateResult {
   usdPrices: Record<string, number>;
@@ -19,6 +20,13 @@ export interface CryptoPricePoint {
 }
 
 const COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3";
+const COINGECKO_RANGE_TO_DAYS: Record<MarketChartRange, string> = {
+  "24h": "1",
+  "7d": "7",
+  "30d": "30",
+  "1y": "365",
+  all: "max",
+};
 
 function buildCoinGeckoHeaders(): HeadersInit {
   const headers: Record<string, string> = {
@@ -96,12 +104,14 @@ export async function fetchCryptoMarketSnapshot(
   };
 }
 
-export async function fetchCryptoPriceHistory24h(
+export async function fetchCryptoPriceHistory(
   providerId: string,
+  range: MarketChartRange,
 ): Promise<CryptoPricePoint[]> {
+  const days = COINGECKO_RANGE_TO_DAYS[range];
   const url = `${COINGECKO_BASE_URL}/coins/${encodeURIComponent(
     providerId,
-  )}/market_chart?vs_currency=usd&days=1`;
+  )}/market_chart?vs_currency=usd&days=${encodeURIComponent(days)}`;
 
   const response = await fetch(url, {
     next: { revalidate: 60 },

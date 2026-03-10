@@ -1,7 +1,8 @@
 import {
   fetchCryptoMarketSnapshot,
-  fetchCryptoPriceHistory24h,
+  fetchCryptoPriceHistory,
 } from "@/lib/api/crypto";
+import type { MarketChartRange } from "@/lib/market";
 
 export interface CachedCryptoMarketSnapshot {
   code: string;
@@ -10,7 +11,8 @@ export interface CachedCryptoMarketSnapshot {
   change24hPct: number | null;
   marketCapUsd: number | null;
   volume24hUsd: number | null;
-  priceHistory24h: Array<{
+  priceHistoryRange: MarketChartRange;
+  priceHistory: Array<{
     timestamp: string;
     priceUsd: number;
   }>;
@@ -30,12 +32,33 @@ export const MARKET_CACHE_CONTROL_VALUE =
 const marketCache = new Map<string, CacheEntry>();
 const inFlightRequests = new Map<string, Promise<CachedCryptoMarketSnapshot>>();
 
+function downsamplePriceHistory(
+  points: Array<{ timestamp: string; priceUsd: number }>,
+  maxPoints: number,
+): Array<{ timestamp: string; priceUsd: number }> {
+  if (points.length <= maxPoints) {
+    return points;
+  }
+
+  const sampled: Array<{ timestamp: string; priceUsd: number }> = [];
+  const lastIndex = points.length - 1;
+  const step = lastIndex / (maxPoints - 1);
+
+  for (let index = 0; index < maxPoints; index += 1) {
+    const sourceIndex = Math.round(index * step);
+    sampled.push(points[Math.min(sourceIndex, lastIndex)]);
+  }
+
+  return sampled;
+}
+
 export async function getCryptoMarketWithCache(params: {
   code: string;
   name: string;
   providerId: string;
+  range: MarketChartRange;
 }): Promise<CachedCryptoMarketSnapshot> {
-  const cacheKey = params.code;
+  const cacheKey = `${params.code}:${params.range}`;
   const cached = marketCache.get(cacheKey);
   const now = Date.now();
 
@@ -54,7 +77,8 @@ export async function getCryptoMarketWithCache(params: {
     let history: Array<{ timestamp: string; priceUsd: number }> = [];
 
     try {
-      history = await fetchCryptoPriceHistory24h(params.providerId);
+      history = await fetchCryptoPriceHistory(params.providerId, params.range);
+      history = downsamplePriceHistory(history, 180);
     } catch {
       history = [];
     }
@@ -66,7 +90,8 @@ export async function getCryptoMarketWithCache(params: {
       change24hPct: snapshot.change24hPct,
       marketCapUsd: snapshot.marketCapUsd,
       volume24hUsd: snapshot.volume24hUsd,
-      priceHistory24h: history,
+      priceHistoryRange: params.range,
+      priceHistory: history,
       updatedAt: snapshot.updatedAt,
       source: "CoinGecko",
     };
@@ -90,6 +115,7 @@ export async function getCryptoMarketWithCache(params: {
 
 export function getLastCachedCryptoMarket(
   code: string,
+  range: MarketChartRange,
 ): CachedCryptoMarketSnapshot | null {
-  return marketCache.get(code)?.data ?? null;
+  return marketCache.get(`${code}:${range}`)?.data ?? null;
 }

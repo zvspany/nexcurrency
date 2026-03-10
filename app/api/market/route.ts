@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
+import { MARKET_CHART_RANGES } from "@/lib/market";
 import { getRatesWithCache } from "@/lib/server/rates-cache";
 import {
   getCryptoMarketWithCache,
@@ -10,6 +11,7 @@ import {
 
 const querySchema = z.object({
   code: z.string().trim().toUpperCase().min(1),
+  range: z.enum(MARKET_CHART_RANGES).default("24h"),
 });
 
 export const revalidate = 60;
@@ -18,6 +20,7 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const queryResult = querySchema.safeParse({
     code: searchParams.get("code") ?? "",
+    range: searchParams.get("range") ?? undefined,
   });
 
   if (!queryResult.success) {
@@ -32,7 +35,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const { code } = queryResult.data;
+  const { code, range } = queryResult.data;
 
   try {
     const rates = await getRatesWithCache();
@@ -56,6 +59,7 @@ export async function GET(request: NextRequest) {
       code: asset.code,
       name: asset.name,
       providerId: asset.providerId,
+      range,
     });
 
     return NextResponse.json(market, {
@@ -65,7 +69,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    const fallback = getLastCachedCryptoMarket(code);
+    const fallback = getLastCachedCryptoMarket(code, range);
 
     if (fallback) {
       return NextResponse.json(fallback, {
