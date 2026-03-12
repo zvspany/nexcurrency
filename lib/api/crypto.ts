@@ -28,6 +28,34 @@ const COINGECKO_RANGE_TO_DAYS: Record<MarketChartRange, string> = {
   all: "max",
 };
 
+function buildHistoryUrls(providerId: string, range: MarketChartRange): string[] {
+  const encodedId = encodeURIComponent(providerId);
+  const days = COINGECKO_RANGE_TO_DAYS[range];
+
+  if (range === "all") {
+    const nowInSeconds = Math.floor(Date.now() / 1000);
+    const tenYearsAgoInSeconds = nowInSeconds - 60 * 60 * 24 * 365 * 10;
+
+    return [
+      `${COINGECKO_BASE_URL}/coins/${encodedId}/market_chart?vs_currency=usd&days=max`,
+      `${COINGECKO_BASE_URL}/coins/${encodedId}/market_chart?vs_currency=usd&days=max&interval=daily`,
+      `${COINGECKO_BASE_URL}/coins/${encodedId}/market_chart?vs_currency=usd&days=3650`,
+      `${COINGECKO_BASE_URL}/coins/${encodedId}/market_chart?vs_currency=usd&days=3650&interval=daily`,
+      `${COINGECKO_BASE_URL}/coins/${encodedId}/market_chart/range?vs_currency=usd&from=${tenYearsAgoInSeconds}&to=${nowInSeconds}`,
+    ];
+  }
+
+  if (range === "1y") {
+    return [
+      `${COINGECKO_BASE_URL}/coins/${encodedId}/market_chart?vs_currency=usd&days=${encodeURIComponent(days)}&interval=daily`,
+    ];
+  }
+
+  return [
+    `${COINGECKO_BASE_URL}/coins/${encodedId}/market_chart?vs_currency=usd&days=${encodeURIComponent(days)}`,
+  ];
+}
+
 function buildCoinGeckoHeaders(): HeadersInit {
   const headers: Record<string, string> = {
     accept: "application/json"
@@ -108,39 +136,48 @@ export async function fetchCryptoPriceHistory(
   providerId: string,
   range: MarketChartRange,
 ): Promise<CryptoPricePoint[]> {
-  const days = COINGECKO_RANGE_TO_DAYS[range];
-  const url = `${COINGECKO_BASE_URL}/coins/${encodeURIComponent(
-    providerId,
-  )}/market_chart?vs_currency=usd&days=${encodeURIComponent(days)}`;
+  const urls = buildHistoryUrls(providerId, range);
+  let lastStatus: number | null = null;
 
-  const response = await fetch(url, {
-    next: { revalidate: 60 },
-    headers: buildCoinGeckoHeaders(),
-  });
+  for (const url of urls) {
+    const response = await fetch(url, {
+      next: { revalidate: 60 },
+      headers: buildCoinGeckoHeaders(),
+    });
 
-  if (!response.ok) {
-    throw new Error(`Unable to load crypto price history (${response.status})`);
+    if (!response.ok) {
+      lastStatus = response.status;
+      continue;
+    }
+
+    const payload = (await response.json()) as {
+      prices?: Array<[number, number]>;
+    };
+
+    const points = (payload.prices ?? [])
+      .filter(
+        (entry): entry is [number, number] =>
+          Array.isArray(entry) &&
+          entry.length >= 2 &&
+          Number.isFinite(entry[0]) &&
+          Number.isFinite(entry[1]) &&
+          entry[1] >= 0,
+      )
+      .map(([timestamp, priceUsd]) => ({
+        timestamp: new Date(timestamp).toISOString(),
+        priceUsd,
+      }));
+
+    if (points.length > 1) {
+      return points;
+    }
   }
 
-  const payload = (await response.json()) as {
-    prices?: Array<[number, number]>;
-  };
+  if (lastStatus !== null) {
+    throw new Error(`Unable to load crypto price history (${lastStatus})`);
+  }
 
-  const points = (payload.prices ?? [])
-    .filter(
-      (entry): entry is [number, number] =>
-        Array.isArray(entry) &&
-        entry.length >= 2 &&
-        Number.isFinite(entry[0]) &&
-        Number.isFinite(entry[1]) &&
-        entry[1] > 0,
-    )
-    .map(([timestamp, priceUsd]) => ({
-      timestamp: new Date(timestamp).toISOString(),
-      priceUsd,
-    }));
-
-  return points;
+  throw new Error("Crypto price history is unavailable");
 }
 
 export async function fetchCryptoData(): Promise<CryptoRateResult> {
