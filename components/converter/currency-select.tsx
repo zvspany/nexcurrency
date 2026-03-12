@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Check, ChevronDown } from "lucide-react";
 
 import { POPULAR_CODES } from "@/lib/assets";
@@ -61,6 +62,7 @@ export function CurrencySelect({
   disabled
 }: CurrencySelectProps) {
   const [open, setOpen] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
 
   const selectedAsset = useMemo(
     () => assets.find((asset) => asset.code === value),
@@ -103,7 +105,32 @@ export function CurrencySelect({
             disabled={disabled}
             className="h-auto w-full justify-between rounded-xl border-border/70 px-3 py-2.5"
           >
-            <AssetLabel asset={selectedAsset} />
+            <span className="flex min-w-0 flex-1 overflow-hidden">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={selectedAsset?.code ?? "empty"}
+                  className="block min-w-0 flex-1"
+                  initial={
+                    shouldReduceMotion
+                      ? false
+                      : { opacity: 0, y: 4, filter: "blur(2px)" }
+                  }
+                  animate={
+                    shouldReduceMotion
+                      ? { opacity: 1 }
+                      : { opacity: 1, y: 0, filter: "blur(0px)" }
+                  }
+                  exit={
+                    shouldReduceMotion
+                      ? { opacity: 0 }
+                      : { opacity: 0, y: -4, filter: "blur(2px)" }
+                  }
+                  transition={{ duration: shouldReduceMotion ? 0.01 : 0.18 }}
+                >
+                  <AssetLabel asset={selectedAsset} />
+                </motion.span>
+              </AnimatePresence>
+            </span>
             <ChevronDown className="ml-2 h-4 w-4 shrink-0 text-muted-foreground" />
           </Button>
         </PopoverTrigger>

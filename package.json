@@ -17,6 +17,7 @@
     "cmdk": "^1.0.4",
     "cryptocurrency-icons": "^0.18.1",
     "currency-flags": "github:vivekimsit/currency-flags",
+    "framer-motion": "^12.36.0",
     "lucide-react": "^0.475.0",
     "next": "^14.2.24",
     "react": "^18.2.0",

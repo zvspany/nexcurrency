@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   AlertTriangle,
   ArrowUpDown,
@@ -140,6 +141,7 @@ export function ConverterCard({
   onPairChange,
   multiConversionCodes,
 }: ConverterCardProps) {
+  const shouldReduceMotion = useReducedMotion();
   const { data, error, isLoading, refresh } = useMarketRates();
 
   const [amountInput, setAmountInput] = useState("1");
@@ -147,6 +149,7 @@ export function ConverterCard({
   const [toCode, setToCode] = useState(DEFAULT_TO);
   const [isCopied, setIsCopied] = useState(false);
   const [marketRange, setMarketRange] = useState<MarketChartRange>("24h");
+  const [swapAnimationStep, setSwapAnimationStep] = useState(0);
 
   const debouncedAmount = useDebouncedValue(amountInput, 120);
 
@@ -250,6 +253,7 @@ export function ConverterCard({
   }, [fromAsset, toAsset]);
 
   const handleSwap = () => {
+    setSwapAnimationStep((current) => current + 1);
     setFromCode(toCode);
     setToCode(fromCode);
   };
@@ -364,6 +368,8 @@ export function ConverterCard({
       : "--";
 
   const amountError = inputValidation.ok ? null : inputValidation.error;
+  const pairTransitionKey =
+    fromAsset && toAsset ? `${fromAsset.code}-${toAsset.code}` : "empty";
 
   return (
     <Card className="relative overflow-hidden border-border/70 bg-card/90">
@@ -505,7 +511,26 @@ export function ConverterCard({
             onClick={handleSwap}
             aria-label="Swap currencies"
           >
-            <ArrowUpDown className="h-4 w-4" />
+            <motion.span
+              className="inline-flex"
+              animate={
+                shouldReduceMotion
+                  ? { scale: 1 }
+                  : { rotate: swapAnimationStep * 180, scale: [1, 1.08, 1] }
+              }
+              transition={{
+                rotate: {
+                  duration: shouldReduceMotion ? 0.01 : 0.28,
+                  ease: [0.22, 1, 0.36, 1],
+                },
+                scale: {
+                  duration: shouldReduceMotion ? 0.01 : 0.22,
+                  times: [0, 0.35, 1],
+                },
+              }}
+            >
+              <ArrowUpDown className="h-4 w-4" />
+            </motion.span>
           </Button>
           <CurrencySelect
             label="To"
@@ -541,28 +566,72 @@ export function ConverterCard({
             </Button>
           </div>
           {fromAsset && toAsset ? (
-            <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/60 px-2 py-1">
-                <CurrencyIcon
-                  code={fromAsset.code}
-                  type={fromAsset.type}
-                  size="sm"
-                />
-                {fromAsset.code}
-              </span>
-              <span>to</span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/60 px-2 py-1">
-                <CurrencyIcon
-                  code={toAsset.code}
-                  type={toAsset.type}
-                  size="sm"
-                />
-                {toAsset.code}
-              </span>
-            </div>
+            <AnimatePresence initial={false} mode="wait">
+              <motion.div
+                key={pairTransitionKey}
+                className="mt-2 flex items-center gap-2 text-xs text-muted-foreground"
+                initial={
+                  shouldReduceMotion
+                    ? false
+                    : { opacity: 0, y: 4, filter: "blur(2px)" }
+                }
+                animate={
+                  shouldReduceMotion
+                    ? { opacity: 1 }
+                    : { opacity: 1, y: 0, filter: "blur(0px)" }
+                }
+                exit={
+                  shouldReduceMotion
+                    ? { opacity: 0 }
+                    : { opacity: 0, y: -4, filter: "blur(2px)" }
+                }
+                transition={{ duration: shouldReduceMotion ? 0.01 : 0.16 }}
+              >
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/60 px-2 py-1">
+                  <CurrencyIcon
+                    code={fromAsset.code}
+                    type={fromAsset.type}
+                    size="sm"
+                  />
+                  {fromAsset.code}
+                </span>
+                <span>to</span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/60 px-2 py-1">
+                  <CurrencyIcon
+                    code={toAsset.code}
+                    type={toAsset.type}
+                    size="sm"
+                  />
+                  {toAsset.code}
+                </span>
+              </motion.div>
+            </AnimatePresence>
           ) : null}
           <p className="mt-2 break-all text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-            {convertedDisplay}
+            <AnimatePresence initial={false} mode="wait">
+              <motion.span
+                key={convertedDisplay}
+                className="inline-block"
+                initial={
+                  shouldReduceMotion
+                    ? false
+                    : { opacity: 0, y: 6, filter: "blur(2px)" }
+                }
+                animate={
+                  shouldReduceMotion
+                    ? { opacity: 1 }
+                    : { opacity: 1, y: 0, filter: "blur(0px)" }
+                }
+                exit={
+                  shouldReduceMotion
+                    ? { opacity: 0 }
+                    : { opacity: 0, y: -6, filter: "blur(2px)" }
+                }
+                transition={{ duration: shouldReduceMotion ? 0.01 : 0.18 }}
+              >
+                {convertedDisplay}
+              </motion.span>
+            </AnimatePresence>
           </p>
           {fromAsset ? (
             <p className="mt-2 text-sm text-muted-foreground">
@@ -609,7 +678,30 @@ export function ConverterCard({
                     {asset.code}
                   </div>
                   <p className="mt-1 text-base font-medium text-foreground">
-                    {formatAmount(value, asset)} {asset.code}
+                    <AnimatePresence initial={false} mode="wait">
+                      <motion.span
+                        key={`${asset.code}-${formatAmount(value, asset)}`}
+                        className="inline-block"
+                        initial={
+                          shouldReduceMotion
+                            ? false
+                            : { opacity: 0, y: 4, filter: "blur(1px)" }
+                        }
+                        animate={
+                          shouldReduceMotion
+                            ? { opacity: 1 }
+                            : { opacity: 1, y: 0, filter: "blur(0px)" }
+                        }
+                        exit={
+                          shouldReduceMotion
+                            ? { opacity: 0 }
+                            : { opacity: 0, y: -4, filter: "blur(1px)" }
+                        }
+                        transition={{ duration: shouldReduceMotion ? 0.01 : 0.15 }}
+                      >
+                        {formatAmount(value, asset)} {asset.code}
+                      </motion.span>
+                    </AnimatePresence>
                   </p>
                 </div>
               ))}
