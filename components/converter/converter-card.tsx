@@ -367,7 +367,7 @@ export function ConverterCard({
 
   return (
     <Card className="relative overflow-hidden border-border/70 bg-card/90">
-      <CardHeader className="relative z-10 rounded-t-2xl bg-gradient-to-r from-sky-500/10 via-cyan-400/5 to-emerald-500/10 pb-4 sm:pb-5">
+      <CardHeader className="relative isolate z-10 overflow-hidden rounded-t-2xl border-b border-white/5 bg-[linear-gradient(115deg,rgba(16,39,62,0.9)_0%,rgba(14,32,50,0.95)_46%,rgba(14,50,54,0.88)_100%)] pb-4 sm:pb-5 before:pointer-events-none before:absolute before:inset-0 before:bg-[radial-gradient(140%_120%_at_0%_0%,rgba(56,189,248,0.12)_0%,rgba(56,189,248,0)_45%),radial-gradient(120%_100%_at_100%_0%,rgba(16,185,129,0.1)_0%,rgba(16,185,129,0)_45%)] after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-white/10">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-2xl font-semibold tracking-tight">
             Currency Converter
