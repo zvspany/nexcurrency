@@ -49,7 +49,7 @@ import { cn } from "@/lib/utils";
 import { validateAmount } from "@/lib/validation";
 
 const DEFAULT_FROM = "USD";
-const DEFAULT_TO = "EUR";
+const DEFAULT_TO = "BTC";
 const QUICK_AMOUNTS = [10, 50, 100, 500, 1000] as const;
 const DEFAULT_MULTI_CONVERSION_CODES = ["USD", "EUR", "BTC", "ETH", "SOL"] as const;
 const MAX_MULTI_CONVERSIONS = 4;

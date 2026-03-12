@@ -7,7 +7,7 @@ import { Hero } from "@/components/sections/hero";
 import { InsightsSection } from "@/components/sections/insights-section";
 
 const DEFAULT_FROM = "USD";
-const DEFAULT_TO = "EUR";
+const DEFAULT_TO = "BTC";
 
 export default function HomePage() {
   const [selectedFromCode, setSelectedFromCode] = useState(DEFAULT_FROM);
