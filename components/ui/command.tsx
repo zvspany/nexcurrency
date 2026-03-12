@@ -45,6 +45,7 @@ const CommandList = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive.List
     ref={ref}
+    data-lenis-prevent=""
     className={cn("max-h-[280px] overflow-y-auto overflow-x-hidden", className)}
     {...props}
   />

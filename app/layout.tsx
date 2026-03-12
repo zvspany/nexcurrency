@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "currency-flags/dist/currency-flags.min.css";
 
+import { SmoothScrollProvider } from "@/components/providers/smooth-scroll-provider";
+
 export const metadata: Metadata = {
   title: "NexCurrency | Modern Currency & Crypto Converter",
   description:
@@ -17,7 +19,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body className="font-sans antialiased">
-        {children}
+        <SmoothScrollProvider>{children}</SmoothScrollProvider>
       </body>
     </html>
   );
