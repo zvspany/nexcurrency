@@ -1,7 +1,14 @@
 "use client";
 
-import { useId, useMemo } from "react";
+import {
+  useId,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type MouseEvent,
+} from "react";
 
+import { formatUsdPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 interface PriceSparklinePoint {
@@ -22,7 +29,8 @@ export function PriceSparkline({
   isLoading = false,
   className,
 }: PriceSparklineProps) {
-  const gradientId = useId();
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const gradientBaseId = useId().replace(/:/g, "-");
 
   const chart = useMemo(() => {
     const sorted = [...points]
@@ -66,15 +74,100 @@ export function PriceSparkline({
 
     const areaPath = `${linePath} L ${lastPoint.x.toFixed(2)} ${(height - padding).toFixed(2)} L ${firstPoint.x.toFixed(2)} ${(height - padding).toFixed(2)} Z`;
     const isUptrend = prices[prices.length - 1] >= prices[0];
+    const gradientId = `sparkline-gradient-${gradientBaseId}`;
 
     return {
       width,
       height,
+      padding,
       linePath,
       areaPath,
       isUptrend,
+      gradientId,
+      points: sorted.map((point, index) => ({
+        timestamp: point.timestamp,
+        priceUsd: point.priceUsd,
+        x: coordinates[index]?.x ?? 0,
+        y: coordinates[index]?.y ?? 0,
+      })),
     };
-  }, [points]);
+  }, [points, gradientBaseId]);
+
+  const hoveredPoint = useMemo(() => {
+    if (!chart || hoveredIndex === null) {
+      return null;
+    }
+
+    const clampedIndex = Math.max(
+      0,
+      Math.min(hoveredIndex, chart.points.length - 1),
+    );
+
+    return chart.points[clampedIndex] ?? null;
+  }, [chart, hoveredIndex]);
+
+  const hoveredPointPosition = useMemo(() => {
+    if (!chart || !hoveredPoint) {
+      return null;
+    }
+
+    return {
+      leftPercent: (hoveredPoint.x / chart.width) * 100,
+      topPercent: (hoveredPoint.y / chart.height) * 100,
+    };
+  }, [chart, hoveredPoint]);
+
+  const tooltipPlacement = useMemo(() => {
+    if (!hoveredPointPosition) {
+      return null;
+    }
+
+    const { leftPercent, topPercent } = hoveredPointPosition;
+
+    if (leftPercent >= 76) {
+      return {
+        transform: "translate(calc(-100% - 10px), -50%)",
+      };
+    }
+
+    if (leftPercent <= 24) {
+      return {
+        transform: "translate(10px, -50%)",
+      };
+    }
+
+    if (topPercent <= 30) {
+      return {
+        transform: "translate(-50%, 10px)",
+      };
+    }
+
+    return {
+      transform: "translate(-50%, calc(-100% - 10px))",
+    };
+  }, [hoveredPointPosition]);
+
+  const handleMouseMove = (event: MouseEvent<HTMLDivElement>) => {
+    if (!chart) {
+      return;
+    }
+
+    const rect = event.currentTarget.getBoundingClientRect();
+
+    if (rect.width <= 0) {
+      return;
+    }
+
+    const relativeX = (event.clientX - rect.left) / rect.width;
+    const clamped = Math.max(0, Math.min(relativeX, 1));
+    const nextIndex = Math.round(clamped * (chart.points.length - 1));
+
+    setHoveredIndex(nextIndex);
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredIndex(null);
+  };
 
   return (
     <div
@@ -88,7 +181,11 @@ export function PriceSparkline({
       </p>
 
       {chart ? (
-        <div className="mt-2">
+        <div
+          className="relative mt-2"
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+        >
           <svg
             viewBox={`0 0 ${chart.width} ${chart.height}`}
             className="h-20 w-full"
@@ -99,7 +196,7 @@ export function PriceSparkline({
           >
             <defs>
               <linearGradient
-                id={gradientId}
+                id={chart.gradientId}
                 x1="0"
                 y1="0"
                 x2="0"
@@ -118,7 +215,7 @@ export function PriceSparkline({
               </linearGradient>
             </defs>
 
-            <path d={chart.areaPath} fill={`url(#${gradientId})`} />
+            <path d={chart.areaPath} fill={`url(#${chart.gradientId})`} />
             <path
               d={chart.linePath}
               fill="none"
@@ -128,7 +225,68 @@ export function PriceSparkline({
               strokeLinecap="round"
               strokeLinejoin="bevel"
             />
+            {hoveredPoint ? (
+              <>
+                <line
+                  x1={hoveredPoint.x}
+                  y1={chart.padding}
+                  x2={hoveredPoint.x}
+                  y2={chart.height - chart.padding}
+                  stroke={chart.isUptrend ? "#34d399" : "#fb7185"}
+                  strokeOpacity="0.35"
+                  strokeWidth="1"
+                  strokeDasharray="2 3"
+                  vectorEffect="non-scaling-stroke"
+                />
+              </>
+            ) : null}
           </svg>
+
+          {hoveredPoint && hoveredPointPosition ? (
+            <>
+              <span
+                className="pointer-events-none absolute h-2.5 w-2.5 rounded-full border border-background shadow-[0_0_0_3px_rgba(0,0,0,0.16)]"
+                style={{
+                  left: `${hoveredPointPosition.leftPercent}%`,
+                  top: `${hoveredPointPosition.topPercent}%`,
+                  transform: "translate(-50%, -50%)",
+                  backgroundColor: chart.isUptrend ? "#34d399" : "#fb7185",
+                }}
+              />
+              <span
+                className="pointer-events-none absolute h-5 w-5 rounded-full border"
+                style={{
+                  left: `${hoveredPointPosition.leftPercent}%`,
+                  top: `${hoveredPointPosition.topPercent}%`,
+                  transform: "translate(-50%, -50%)",
+                  borderColor: chart.isUptrend
+                    ? "rgba(52, 211, 153, 0.35)"
+                    : "rgba(251, 113, 133, 0.35)",
+                }}
+              />
+            </>
+          ) : null}
+
+          {hoveredPoint && hoveredPointPosition && tooltipPlacement ? (
+            <div
+              className="pointer-events-none absolute top-1 z-10 rounded-md border border-border/70 bg-background/95 px-2 py-1 text-[11px] text-foreground shadow-sm backdrop-blur"
+              style={
+                {
+                  left: `${hoveredPointPosition.leftPercent}%`,
+                  top: `${hoveredPointPosition.topPercent}%`,
+                  transform: tooltipPlacement.transform,
+                } as CSSProperties
+              }
+            >
+              <p className="font-medium">{formatUsdPrice(hoveredPoint.priceUsd)}</p>
+              <p className="text-[10px] text-muted-foreground">
+                {new Intl.DateTimeFormat("en-US", {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                }).format(new Date(hoveredPoint.timestamp))}
+              </p>
+            </div>
+          ) : null}
         </div>
       ) : (
         <div className="mt-2 flex h-20 items-center justify-center rounded-md border border-dashed border-border/60 text-xs text-muted-foreground">
