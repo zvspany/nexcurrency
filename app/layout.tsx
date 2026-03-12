@@ -6,13 +6,13 @@ import "currency-flags/dist/currency-flags.min.css";
 import { SmoothScrollProvider } from "@/components/providers/smooth-scroll-provider";
 
 export const metadata: Metadata = {
-  title: "NexCurrency | Modern Currency & Crypto Converter",
+  title: "Fiat & Crypto Converter | Real-Time Exchange Rates",
   description:
-    "Convert fiat and crypto assets instantly with live rates, smart formatting, and a premium modern interface."
+    "Instantly convert fiat and crypto currencies with real-time exchange rates. Fast, simple, open-source currency converter with multi-currency results.",
 };
 
 export default function RootLayout({
-  children
+  children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
