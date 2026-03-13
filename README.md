@@ -13,7 +13,7 @@ Modern currency and crypto converter built with Next.js 14, TypeScript, Tailwind
 - Currency icons in selectors and conversion summary:
   - Crypto icons from `cryptocurrency-icons`
   - Fiat flags from `currency-flags`
-- Default pair: `USD -> EUR`
+- Default pair: `USD -> BTC`
 - Instant conversion with swap action
 - Current rate, inverse rate, and last update timestamp
 - Client-side validation for invalid/negative amounts
