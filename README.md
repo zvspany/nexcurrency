@@ -1,3 +1,10 @@
+> **Repository moved**
+>
+> Active development continues at:
+> https://git.zvcloud.net/zv/nexcurrency
+>
+> This GitHub repository is archived and no longer accepts issues or pull requests.
+
 # NexCurrency
 
 Modern currency and crypto converter built with Next.js 14, TypeScript, Tailwind CSS, and shadcn-style UI components.
